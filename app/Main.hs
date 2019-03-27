@@ -19,7 +19,7 @@ buildingRender standardInput = do
                                return (Right standardInput)
 
 processInput :: String -> String
-processInput standardInput = case (evalState (buildingRender standardInput) startState) of
+processInput standardInput = case evalState (buildingRender standardInput) startState of
                  Left _ -> errorLine
                  Right s -> s
 
@@ -50,9 +50,8 @@ main = do
          args <- getArgs
          let argsWithOne = if null args then ["1"] else args
          case argsWithOne of
-           (h:_) | ((Text.Read.readMaybe h) :: Maybe Int) /= Nothing -> do
+           (h:_) | isJust (Text.Read.readMaybe h :: Maybe Int)  -> do
                                                                           standardInput <- getContents
                                                                           let executedCommands = processInput standardInput
                                                                           putStrLn (firstLine ++ "\n\n" ++ executedCommands ++ "\n\n" ++ lastLine)
-           otherwise -> do
-                           putStrLn "Usage: ./program scale"
+           _ -> putStrLn "Usage: ./program scale"
