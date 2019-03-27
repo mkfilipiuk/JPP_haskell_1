@@ -1,14 +1,13 @@
 name:                JPP-haskell-task1
 version:             0.1.0.0
-github:              "githubuser/JPP-haskell-task1"
+github:              "mkfilipiuk/JPP-haskell-task1"
 license:             BSD3
-author:              "Author name here"
-maintainer:          "example@example.com"
-copyright:           "2019 Author name here"
+author:              "Michał Filipiuk"
+maintainer:          "mkfilipiuk@gmail.com"
+copyright:           "2019 Michał Filipiuk"
 
 extra-source-files:
 - README.md
-- ChangeLog.md
 
 # Metadata used when publishing your package
 # synopsis:            Short description of your package
@@ -21,6 +20,8 @@ description:         Please see the README on GitHub at <https://github.com/gith
 
 dependencies:
 - base >= 4.7 && < 5
+- mtl >= 2.2.2
+- QuickCheck >= 2.12
 
 library:
   source-dirs: src
@@ -38,7 +39,7 @@ executables:
 
 tests:
   JPP-haskell-task1-test:
-    main:                Spec.hs
+    main:                TestTransform.hs
     source-dirs:         test
     ghc-options:
     - -threaded

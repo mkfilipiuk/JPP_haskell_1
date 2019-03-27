@@ -150,7 +150,3 @@ trline t (p1,p2) = (trpoint t p1, trpoint t p2)
 
 transform :: Transform -> Picture -> Picture
 transform t Picture {pictureLines = pl} = Picture {pictureLines = (map (trline t) pl)}
-
---TranformsList [VectorTransform (((-1941598036941) % 1969679790068) -> ((-3492762117037) % 6398678210452))]
---TranformsList [RotationTransform (1597065196210031 % 4442737490389)]
---TranformsList [VectorTransform (((-387920482565) % 1678482931093) -> (775939336714 % 2320104954661))]
