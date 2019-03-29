@@ -105,6 +105,10 @@ data AuxTransform
   | RotationTransform R
   deriving (Eq, Show)
 
+isIdentityTransformation :: AuxTransform -> Bool
+isIdentityTransformation (VectorTransform v) = direction v == pointZero
+isIdentityTransformation (RotationTransform r) = r == zeroR
+
 bhaskaraSineApproximation :: R -> R
 bhaskaraSineApproximation x = (4 * x * (180 - x)) / (40500 - x * (180 - x))
 
@@ -163,7 +167,7 @@ mergeTransformations :: Transform -> Transform -> Transform
 mergeTransformations (TranformsList []) t2 = t2
 mergeTransformations t1 (TranformsList []) = t1
 mergeTransformations (TranformsList t1) (TranformsList t2) =
-  TranformsList (auxMergeTransformations (reverse (t1 ++ t2)) [])
+  TranformsList (auxMergeTransformations (reverse t1) t2)
 
 auxMergeTransformations :: [AuxTransform] -> [AuxTransform] -> [AuxTransform]
 auxMergeTransformations [] acc =  acc
@@ -171,22 +175,20 @@ auxMergeTransformations (t:ts) [] =
   auxMergeTransformations ts [t]
 auxMergeTransformations (t:ts) (acc:accs) =
   case (t, acc) of
+    (VectorTransform v1, VectorTransform v2) | isIdentityTransformation $ (VectorTransform (v1 >< v2))->
+      auxMergeTransformations
+        ts
+        accs
     (VectorTransform v1, VectorTransform v2) ->
+      (reverse ts) ++ (VectorTransform (v1 >< v2) : accs)
+    (RotationTransform r1, RotationTransform r2) | isIdentityTransformation $ RotationTransform $ normalizeDegree r1+r2 ->
       auxMergeTransformations
         ts
-        (VectorTransform (v1 >< v2) : accs)
+        accs
     (RotationTransform r1, RotationTransform r2) ->
-      auxMergeTransformations
-        ts
-        (RotationTransform (normalizeDegree (r1 + r2)) : accs)
-    (VectorTransform v1, RotationTransform r2) ->
-      auxMergeTransformations
-        ts
-        ([VectorTransform v1, RotationTransform r2] ++ accs)
-    (RotationTransform r1, VectorTransform v2) ->
-      auxMergeTransformations
-        ts
-        ([RotationTransform r1, VectorTransform v2] ++ accs)
+      (reverse ts) ++ (RotationTransform (normalizeDegree (r1 + r2)) : accs)
+    _ ->
+      (reverse ts) ++ ([t,acc] ++ accs)
 
 trpoint :: Transform -> Point -> Point
 trpoint (TranformsList auxTransforms) p =

@@ -208,10 +208,17 @@ setError = do
   s <- get
   put $ s {isError = True}
 
+readIntWithSign :: String -> Maybe Int
+readIntWithSign (s:ss) =
+  if s == '+' then
+    Read.readMaybe ss
+  else
+    Read.readMaybe (s:ss)
+
 parseInput :: [String] -> State ProgramState (Either String Picture)
 parseInput [] = Right . picture <$> get
 parseInput (instruction:rest) = do
-  let integerNumber = Read.readMaybe instruction :: Maybe Int
+  let integerNumber = readIntWithSign instruction :: Maybe Int
   case integerNumber of
     Just nn -> push (toRational nn)
     _ ->
