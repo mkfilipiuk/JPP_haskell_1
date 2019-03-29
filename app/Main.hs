@@ -4,6 +4,7 @@
 
 module Main where
 
+import Mon
 import Lib
 import Data.Maybe
 import System.Environment
@@ -22,7 +23,7 @@ data ProgramState = ProgramState { n :: Int
                                  , currentPoint :: Point
                                  , currentPointIsDefined :: Bool
                                  , currentTransform :: Transform
-                                 , currentPath :: Picture
+                                 , lengthOfCurrentPath :: Int
                                  , picture :: Picture
                                  , isError :: Bool
                                  }
@@ -34,7 +35,7 @@ startState scale = ProgramState { n = scale
                                 , currentPoint = point (0,0)
                                 , currentPointIsDefined = False
                                 , currentTransform = TranformsList []
-                                , currentPath = Picture {pictureLines = []}
+                                , lengthOfCurrentPath = 0
                                 , picture = Picture {pictureLines = []}
                                 , isError = False
                                 }
@@ -104,12 +105,13 @@ executeMoveTo = do
                   elem1 <- pop
                   s <- get
                   case (elem1, elem2) of
-                   (Just element1, Just element2) -> do (put $ s {startPoint = point (element1, element2)
-                                                                 ,currentPoint = point (element1, element2)
-                                                                 ,startPointIsDefined = True
-                                                                 ,currentPointIsDefined = True
-                                                                 })
-                   _ -> do put $ previousState {isError = True}
+                    (Just element1, Just element2) -> do (put $ s {startPoint = transformedPoint
+                                                                  ,currentPoint = transformedPoint
+                                                                  ,startPointIsDefined = True
+                                                                  ,currentPointIsDefined = True
+                                                                  })
+                                                      where transformedPoint = trpoint (currentTransform s) (point (element1, element2))
+                    _ -> do put $ previousState {isError = True}
 
 executeLineTo :: State ProgramState ()
 executeLineTo = do
@@ -121,32 +123,50 @@ executeLineTo = do
                     elem1 <- pop
                     s <- get
                     case (elem1, elem2) of
-                      (Just element1, Just element2) -> do (put $ s {currentPoint = point (element1, element2)
-                                                                    ,currentPath = line (coordinates $ currentPoint s) (element1, element2) & (currentPath s)
+                      (Just element1, Just element2) -> do (put $ s {currentPoint = transformedPoint
+                                                                    ,picture = (line (coordinates $ currentPoint s) (coordinates transformedPoint)) & (picture s)
+                                                                    ,lengthOfCurrentPath = (lengthOfCurrentPath s) + 1
                                                                     })
+                                                        where transformedPoint = trpoint (currentTransform s) (point (element1, element2))
                       _ -> do put $ previousState {isError = True}
 
 addLineIfCurrentPath :: State ProgramState ()
 addLineIfCurrentPath = do
                          s <- get
-                         if (lenghtOfPicture $ currentPath s) > 0 then
-                           put $ s {currentPath = (line (coordinates $ currentPoint s)  (coordinates $ startPoint s)) & (currentPath s)}
-                         else
+                         if (lengthOfCurrentPath s) > 0 then do
+                           put $ s {picture = (line (coordinates $ currentPoint s)  (coordinates $ startPoint s)) & (picture s)
+                                   ,lengthOfCurrentPath = 0
+                                   }
+                         else do
                            return ()
 
 executeClosePath :: State ProgramState ()
 executeClosePath = do
                      addLineIfCurrentPath
                      s <- get
-                     put $ s {picture = (currentPath s) & (picture s)
-                             ,currentPath = Picture {pictureLines = []}
-                             ,currentPoint = startPoint s}
+                     put $ s {picture = (transform (currentTransform s) $ picture s) & (picture s)
+                             ,currentPoint = startPoint s
+                             ,currentTransform = TranformsList []}
 
 executeTranslate :: State ProgramState ()
-executeTranslate = return () -- TODO
+executeTranslate = do
+                     previousState <- get
+                     elem2 <- pop
+                     elem1 <- pop
+                     s <- get
+                     case (elem1, elem2) of
+                       (Just element1, Just element2) -> do (put $ s {currentTransform = (translate (Vec (Point (element1, element2)))) >< currentTransform s})
+                       _ -> do put $ previousState {isError = True}
+
 
 executeRotate :: State ProgramState ()
-executeRotate = return ()-- TODO
+executeRotate = do
+                  previousState <- get
+                  elem1 <- pop
+                  s <- get
+                  case elem1 of
+                    Just element1 -> do (put $ s {currentTransform = (rotate element1) >< currentTransform s})
+                    _ -> do put $ previousState {isError = True}
 
 setError :: State ProgramState ()
 setError = do
@@ -156,7 +176,7 @@ setError = do
 parseInput :: [String] -> State ProgramState (Either String Picture)
 parseInput [] = do
                   s <- get
-                  return (Right ((currentPath s) & (picture s)))
+                  return (Right (picture s))
 parseInput (instruction:rest) = do
                                   let integerNumber = (Read.readMaybe instruction :: Maybe Int)
                                   case integerNumber of
