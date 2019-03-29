@@ -84,38 +84,38 @@ push i = do
   s <- get
   put $ s {stack = i : stack s}
 
-executeOperation :: (R -> R -> R) -> State ProgramState ()
-executeOperation op = do
-  previousState <- get
+getTwoElementsFromStack :: State ProgramState (Maybe R, Maybe R)
+getTwoElementsFromStack = do
   elem2 <- pop
   elem1 <- pop
+  return (elem1, elem2)
+
+executeOperation :: (R -> R -> R) -> State ProgramState ()
+executeOperation op = do
+  (elem1, elem2) <- getTwoElementsFromStack
   s <- get
   case (elem1, elem2) of
     (Just element1, Just element2) ->
       put $ s {stack = op element1 element2 : stack s}
-    _ -> put $ previousState {isError = True}
+    _ -> put $ s {isError = True}
 
 executeAdd = executeOperation (+)
 
 executeSub = executeOperation (-)
 
 executeDiv = do
-  previousState <- get
-  elem2 <- pop
-  elem1 <- pop
+  (elem1, elem2) <- getTwoElementsFromStack
   s <- get
   case (elem1, elem2) of
     (Just element1, Just element2)
       | element2 /= 0 -> put $ s {stack = element1 / element2 : stack s}
-    _ -> put $ previousState {isError = True}
+    _ -> put $ s {isError = True}
 
 executeMul = executeOperation (*)
 
 executeMoveTo :: State ProgramState ()
 executeMoveTo = do
-  previousState <- get
-  elem2 <- pop
-  elem1 <- pop
+  (elem1, elem2) <- getTwoElementsFromStack
   s <- get
   case (elem1, elem2) of
     (Just element1, Just element2) ->
@@ -128,7 +128,7 @@ executeMoveTo = do
         }
       where transformedPoint =
               trpoint (currentTransform s) (point (element1, element2))
-    _ -> put $ previousState {isError = True}
+    _ -> put $ s {isError = True}
 
 executeLineTo :: State ProgramState ()
 executeLineTo = do
@@ -136,8 +136,7 @@ executeLineTo = do
   if not (currentPointIsDefined previousState)
     then put $ previousState {isError = True}
     else do
-      elem2 <- pop
-      elem1 <- pop
+      (elem1, elem2) <- getTwoElementsFromStack
       s <- get
       case (elem1, elem2) of
         (Just element1, Just element2) ->
@@ -180,9 +179,7 @@ executeClosePath = do
 
 executeTranslate :: State ProgramState ()
 executeTranslate = do
-  previousState <- get
-  elem2 <- pop
-  elem1 <- pop
+  (elem1, elem2) <- getTwoElementsFromStack
   s <- get
   case (elem1, elem2) of
     (Just element1, Just element2) ->
@@ -191,7 +188,7 @@ executeTranslate = do
         { currentTransform =
             translate (Vec (Point (element1, element2))) >< currentTransform s
         }
-    _ -> put $ previousState {isError = True}
+    _ -> put $ s {isError = True}
 
 executeRotate :: State ProgramState ()
 executeRotate = do

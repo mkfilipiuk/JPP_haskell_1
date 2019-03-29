@@ -3,8 +3,8 @@
 -- Michał Filipiuk (mf385423@students.mimuw.edu.pl)a
 module Lib where
 
-import Data.Ratio
-import Mon
+import           Data.Ratio
+import           Mon
 
 -- Types and useful constants
 type R = Rational
@@ -106,7 +106,7 @@ data AuxTransform
   deriving (Eq, Show)
 
 isIdentityTransformation :: AuxTransform -> Bool
-isIdentityTransformation (VectorTransform v) = direction v == pointZero
+isIdentityTransformation (VectorTransform v)   = direction v == pointZero
 isIdentityTransformation (RotationTransform r) = r == zeroR
 
 bhaskaraSineApproximation :: R -> R
@@ -175,20 +175,20 @@ auxMergeTransformations (t:ts) [] =
   auxMergeTransformations ts [t]
 auxMergeTransformations (t:ts) (acc:accs) =
   case (t, acc) of
-    (VectorTransform v1, VectorTransform v2) | isIdentityTransformation $ (VectorTransform (v1 >< v2))->
+    (VectorTransform v1, VectorTransform v2) | isIdentityTransformation $ VectorTransform (v1 >< v2)->
       auxMergeTransformations
         ts
         accs
     (VectorTransform v1, VectorTransform v2) ->
-      (reverse ts) ++ (VectorTransform (v1 >< v2) : accs)
+      reverse ts ++ (VectorTransform (v1 >< v2) : accs)
     (RotationTransform r1, RotationTransform r2) | isIdentityTransformation $ RotationTransform $ normalizeDegree r1+r2 ->
       auxMergeTransformations
         ts
         accs
     (RotationTransform r1, RotationTransform r2) ->
-      (reverse ts) ++ (RotationTransform (normalizeDegree (r1 + r2)) : accs)
+      reverse ts ++ (RotationTransform (normalizeDegree (r1 + r2)) : accs)
     _ ->
-      (reverse ts) ++ ([t,acc] ++ accs)
+      reverse ts ++ ([t,acc] ++ accs)
 
 trpoint :: Transform -> Point -> Point
 trpoint (TranformsList auxTransforms) p =
