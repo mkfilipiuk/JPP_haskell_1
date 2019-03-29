@@ -62,6 +62,8 @@ rectangle r1 r2 = Picture {pictureLines = [( point zeroR2, point (zeroR, r1))
 
 reversePicture Picture {pictureLines = l} = Picture {pictureLines = reverse l}
 
+lenghtOfPicture Picture {pictureLines = l} = length l
+
 (&) :: Picture -> Picture -> Picture
 (&) Picture {pictureLines = l1} Picture {pictureLines = l2} = Picture {pictureLines = l1 ++ l2}
 

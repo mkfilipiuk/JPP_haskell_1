@@ -20,6 +20,7 @@ data ProgramState = ProgramState { n :: Int
                                  , startPoint :: Point
                                  , startPointIsDefined :: Bool
                                  , currentPoint :: Point
+                                 , currentPointIsDefined :: Bool
                                  , currentTransform :: Transform
                                  , currentPath :: Picture
                                  , picture :: Picture
@@ -31,6 +32,7 @@ startState scale = ProgramState { n = scale
                                 , startPoint = point (0,0)
                                 , startPointIsDefined = False
                                 , currentPoint = point (0,0)
+                                , currentPointIsDefined = False
                                 , currentTransform = TranformsList []
                                 , currentPath = Picture {pictureLines = []}
                                 , picture = Picture {pictureLines = []}
@@ -102,24 +104,43 @@ executeMoveTo = do
                   elem1 <- pop
                   s <- get
                   case (elem1, elem2) of
-                   (Just element1, Just element2) -> do (put $ s {currentPoint = point (element1, element2), startPoint = (if startPointIsDefined s == False then point (element1, element2) else startPoint s), startPointIsDefined = True})
+                   (Just element1, Just element2) -> do (put $ s {startPoint = point (element1, element2)
+                                                                 ,currentPoint = point (element1, element2)
+                                                                 ,startPointIsDefined = True
+                                                                 ,currentPointIsDefined = True
+                                                                 })
                    _ -> do put $ previousState {isError = True}
 
 executeLineTo :: State ProgramState ()
 executeLineTo = do
                   previousState <- get
-                  if startPointIsDefined previousState == False then do
+                  if currentPointIsDefined previousState == False then do
                     put $ previousState {isError = True}
                   else do
                     elem2 <- pop
                     elem1 <- pop
                     s <- get
                     case (elem1, elem2) of
-                      (Just element1, Just element2) -> do (put $ s {currentPoint = point (element1, element2), currentPath = line (coordinates $ currentPoint s) (element1, element2) & (currentPath s)})
+                      (Just element1, Just element2) -> do (put $ s {currentPoint = point (element1, element2)
+                                                                    ,currentPath = line (coordinates $ currentPoint s) (element1, element2) & (currentPath s)
+                                                                    })
                       _ -> do put $ previousState {isError = True}
 
+addLineIfCurrentPath :: State ProgramState ()
+addLineIfCurrentPath = do
+                         s <- get
+                         if (lenghtOfPicture $ currentPath s) > 0 then
+                           put $ s {currentPath = (line (coordinates $ currentPoint s)  (coordinates $ startPoint s)) & (currentPath s)}
+                         else
+                           return ()
+
 executeClosePath :: State ProgramState ()
-executeClosePath = return () -- TODO
+executeClosePath = do
+                     addLineIfCurrentPath
+                     s <- get
+                     put $ s {picture = (currentPath s) & (picture s)
+                             ,currentPath = Picture {pictureLines = []}
+                             ,currentPoint = startPoint s}
 
 executeTranslate :: State ProgramState ()
 executeTranslate = return () -- TODO
