@@ -174,8 +174,7 @@ executeClosePath = do
   s <- get
   put $
     s
-      { picture = transform (currentTransform s) (picture s) & picture s
-      , currentPoint = startPoint s
+      { currentPoint = startPoint s
       , currentTransform = TranformsList []
       }
 
