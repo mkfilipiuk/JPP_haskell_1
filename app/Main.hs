@@ -3,13 +3,13 @@
 -- Michał Filipiuk (mf385423@students.mimuw.edu.pl)
 module Main where
 
-import Control.Monad.IO.Class
-import Control.Monad.State.Lazy
-import Data.Maybe
-import Lib
-import Mon
-import System.Environment
-import qualified Text.Read as Read
+import           Control.Monad.IO.Class
+import           Control.Monad.State.Lazy
+import           Data.Maybe
+import           Lib
+import           Mon
+import           System.Environment
+import qualified Text.Read                as Read
 
 firstLine = "300 400 translate"
 
@@ -36,16 +36,16 @@ translation = "translate"
 rotation = "rotate"
 
 data ProgramState = ProgramState
-  { n :: Int
-  , stack :: [R]
-  , startPoint :: Point
-  , startPointIsDefined :: Bool
-  , currentPoint :: Point
+  { n                     :: Int
+  , stack                 :: [R]
+  , startPoint            :: Point
+  , startPointIsDefined   :: Bool
+  , currentPoint          :: Point
   , currentPointIsDefined :: Bool
-  , currentTransform :: Transform
-  , lengthOfCurrentPath :: Int
-  , picture :: Picture
-  , isError :: Bool
+  , currentTransform      :: Transform
+  , lengthOfCurrentPath   :: Int
+  , picture               :: Picture
+  , isError               :: Bool
   }
 
 startState scale =
@@ -268,7 +268,7 @@ printPicture intRendering = concat $ reverse $ auxPrintPicture intRendering []
 processInput :: Int -> String -> String
 processInput scale standardInput =
   case evalState (buildingRender standardInput) (startState scale) of
-    Left _ -> errorLine
+    Left _  -> errorLine
     Right s -> s
 
 main :: IO ()
