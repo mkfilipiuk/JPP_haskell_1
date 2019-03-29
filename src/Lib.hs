@@ -60,6 +60,8 @@ rectangle r1 r2 = Picture {pictureLines = [( point zeroR2, point (zeroR, r1))
                                           ,( point (zeroR, r2), point (r1,r2))
                                           ]}
 
+reversePicture Picture {pictureLines = l} = Picture {pictureLines = reverse l}
+
 (&) :: Picture -> Picture -> Picture
 (&) Picture {pictureLines = l1} Picture {pictureLines = l2} = Picture {pictureLines = l1 ++ l2}
 
@@ -68,8 +70,8 @@ rectangle r1 r2 = Picture {pictureLines = [( point zeroR2, point (zeroR, r1))
 type IntLine = ((Int,Int), (Int,Int))
 type IntRendering = [IntLine]
 
-renderScaled :: Integer -> Picture -> IntRendering
-renderScaled i Picture {pictureLines = l} = map (scaleLine i) l
+renderScaled :: Int -> Picture -> IntRendering
+renderScaled i Picture {pictureLines = l} = map (scaleLine $ toInteger i) l
 
 scaleLine :: Integer -> Line -> IntLine
 scaleLine i (p1, p2) = (roundPoint (scalePoint i p1), roundPoint (scalePoint i p2))
