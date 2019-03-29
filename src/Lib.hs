@@ -163,29 +163,29 @@ mergeTransformations :: Transform -> Transform -> Transform
 mergeTransformations (TranformsList []) t2 = t2
 mergeTransformations t1 (TranformsList []) = t1
 mergeTransformations (TranformsList t1) (TranformsList t2) =
-  auxMergeTransformations (TranformsList (reverse (t1 ++ t2))) []
+  TranformsList (auxMergeTransformations (reverse (t1 ++ t2)) [])
 
-auxMergeTransformations :: Transform -> [AuxTransform] -> Transform
-auxMergeTransformations (TranformsList []) acc = TranformsList acc
-auxMergeTransformations (TranformsList (t:ts)) [] =
-  auxMergeTransformations (TranformsList ts) [t]
-auxMergeTransformations (TranformsList (t:ts)) (acc:accs) =
+auxMergeTransformations :: [AuxTransform] -> [AuxTransform] -> [AuxTransform]
+auxMergeTransformations [] acc =  acc
+auxMergeTransformations (t:ts) [] =
+  auxMergeTransformations ts [t]
+auxMergeTransformations (t:ts) (acc:accs) =
   case (t, acc) of
     (VectorTransform v1, VectorTransform v2) ->
       auxMergeTransformations
-        (TranformsList ts)
+        ts
         (VectorTransform (v1 >< v2) : accs)
     (RotationTransform r1, RotationTransform r2) ->
       auxMergeTransformations
-        (TranformsList ts)
+        ts
         (RotationTransform (normalizeDegree (r1 + r2)) : accs)
     (VectorTransform v1, RotationTransform r2) ->
       auxMergeTransformations
-        (TranformsList ts)
+        ts
         ([VectorTransform v1, RotationTransform r2] ++ accs)
     (RotationTransform r1, VectorTransform v2) ->
       auxMergeTransformations
-        (TranformsList ts)
+        ts
         ([RotationTransform r1, VectorTransform v2] ++ accs)
 
 trpoint :: Transform -> Point -> Point
@@ -193,8 +193,8 @@ trpoint (TranformsList auxTransforms) p =
   foldl (flip applyAuxTransformToPoint) p auxTransforms
 
 trvec :: Transform -> Vec -> Vec
-trvec (TranformsList auxTransforms) Vec {direction = p} =
-  Vec {direction = foldl (flip applyAuxTransformToPoint) p auxTransforms}
+trvec t Vec {direction = p} =
+  Vec {direction = trpoint t p}
 
 trline :: Transform -> Line -> Line
 trline t (p1, p2) = (trpoint t p1, trpoint t p2)
