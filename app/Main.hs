@@ -284,7 +284,7 @@ main = do
         if null args
           then ["1"]
           else args
-  let scale = Read.readMaybe $ head argsWithOne
+  let scale = readIntWithSign $ head argsWithOne
   case scale of
     Just n -> do
       standardInput <- getContents
